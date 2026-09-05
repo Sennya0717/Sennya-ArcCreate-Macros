@@ -22,7 +22,7 @@ Macro.new("removeTrace")
         --重寫黑線、天鍵
         for _, arctap in ipairs(allArctaps.arctap) do
             for _, trace in ipairs(traces) do
-                if arctap.arc.instanceEquals(trace) then
+                if arctap.arc == trace then
                     local timing = arctap.timing
                     table.insert(arcs, Event.arc(
                     timing, arctap.arc.positionAt(timing),
