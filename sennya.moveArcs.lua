@@ -12,25 +12,37 @@ Macro.new("moveArcs")
         local FieldX = DialogField.create("X")
             .setLabel("X")
             .defaultTo(0)
-            .textField(FieldConstraint.create().float())
             .setHint("X-axis movement distance...")
+            .textField(FieldConstraint.create().float())
         local FieldY = DialogField.create("Y")
             .setLabel("Y")
             .defaultTo(0)
+            .setHint("Y-axis movement distance...")
             .textField(FieldConstraint.create().float())
-            .setHint("Y-axis movement distance...")        
+        local lockHead = DialogField.create("lockHead")
+            .setLabel("Lock Head")
+            .setTooltip("Lock Head of Arcs/Trails")
+            .checkbox()
+        local lockTail = DialogField.create("lockTail")
+            .setLabel("Lock Tail")
+            .setTooltip("Lock Tail of Arcs/Trails")
+            .checkbox()
         
         local userInput = 
             DialogInput
                 .withTitle("Move Arcs")
                 .requestInput({
                     FieldX,
-                    FieldY
+                    FieldY,
+                    lockHead,
+                    lockTail
                 })
         coroutine.yield()
 
         local x = tonumber(userInput.result["X"])
         local y = tonumber(userInput.result["Y"])
+        local lockHead = userInput.result["lockHead"]
+        local lockTail = userInput.result["lockTail"]
 
         local allArctaps = Event.query(EventSelectionConstraint.create().arctap())
 
@@ -41,8 +53,8 @@ Macro.new("moveArcs")
 
         for _, object in ipairs(selected.resultCombined) do
             table.insert(arcs, Event.arc(
-                object.timing, object.startX + x, object.startY + y,
-                object.endTiming, object.endX + x, object.endY + y,
+                object.timing, (not lockHead and (object.startX + x) or object.startX), (not lockHead and (object.startY + y) or object.startY),
+                object.endTiming, (not lockTail and object.endX + x) or object.endX, (not lockTail and (object.endY + y) or object.endY),
                 object.isVoid, object.color, object.type, object.timingGroup, object.sfx, object.arcResolutionMultiplier))
 
             if object.is("voidarc") then
@@ -54,7 +66,7 @@ Macro.new("moveArcs")
         end
         for _, arctap in ipairs(allArctaps.arctap) do
             for traceIndex, trace in ipairs(traces) do
-                if arctap.arc.instanceEquals(trace) then
+                if arctap.arc == trace then
                     command.add(Event.arctap(arctap.timing,newTraces[traceIndex] , arctap.width).save())
                     command.add(arctap.delete())
                 end
